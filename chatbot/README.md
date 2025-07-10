@@ -1,6 +1,6 @@
 #Healthcare AI Chatbot
 
-A modern, intelligent chatbot designed specifically for Veterans Affairs healthcare services. Features voice interaction, comprehensive analytics, extensive knowledge about medical procedures, mental health services, disability benefits, and general VA healthcare.
+A modern, intelligent chatbot designed specifically for healthcare services. Features voice interaction, comprehensive analytics, extensive knowledge about medical procedures, mental health services, disability benefits, and general healthcare.
 
 ## 🚀 Latest Updates - Training Integration & Context Awareness
 
