@@ -1,0 +1,93 @@
+{
+  "name": "@va-healthcare/ai-chatbot",
+  "version": "1.0.0",
+  "description": "VA Healthcare AI Chatbot with training system integration and context awareness",
+  "main": "core/va-chatbot.js",
+  "types": "types/index.d.ts",
+  "files": [
+    "core/",
+    "demos/",
+    "docs/",
+    "tests/",
+    "assets/",
+    "types/",
+    "DISTRIBUTION_README.md"
+  ],
+  "scripts": {
+    "build": "node build-dist.js",
+    "start": "cd demos && python -m http.server 8000",
+    "dev": "cd demos && python -m http.server 8080",
+    "test": "node tests/test-chatbot.js",
+    "demo": "cd demos && start live-demo.html",
+    "validate": "cd demos && start integration-test.html",
+    "training": "cd core && start training.html",
+    "package": "npm run build && npm pack",
+    "clean": "rimraf dist/",
+    "serve": "cd core && python -m http.server 3000"
+  },
+  "keywords": [
+    "healthcare",
+    "chatbot",
+    "va",
+    "veterans-affairs",
+    "medical",
+    "ai",
+    "assistant",
+    "context-aware",
+    "training-system",
+    "voice-enabled",
+    "accessibility",
+    "hipaa-compliant"
+  ],
+  "author": {
+    "name": "VA Healthcare Development Team",
+    "email": "healthcare-dev@va.gov"
+  },
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "terser": "^5.19.0",
+    "html-minifier": "^4.0.0",
+    "rimraf": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/va-healthcare/ai-chatbot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/va-healthcare/ai-chatbot/issues"
+  },
+  "homepage": "https://github.com/va-healthcare/ai-chatbot#readme",
+  "browserslist": [
+    "last 2 versions",
+    "not dead",
+    "> 1%",
+    "IE 11"
+  ],
+  "config": {
+    "port": 8000,
+    "host": "localhost"
+  },
+  "peerDependencies": {
+    "font-awesome": "^6.0.0"
+  },
+  "optionalDependencies": {
+    "speech-synthesis": "*",
+    "web-speech-api": "*"
+  },
+  "categories": [
+    "AI/ML",
+    "Healthcare",
+    "Chatbots",
+    "Voice",
+    "Accessibility"
+  ],
+  "badges": [
+    "https://img.shields.io/badge/VA-Healthcare-blue",
+    "https://img.shields.io/badge/Voice-Enabled-green",
+    "https://img.shields.io/badge/HIPAA-Compliant-red",
+    "https://img.shields.io/badge/Accessible-WCAG2.1-orange"
+  ]
+}

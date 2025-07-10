@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VA AI Chatbot - Live Integration Demo</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Sans Pro', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #003f7f 0%, #0078d4 25%, #40e0d0 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .demo-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+
+        .main-demo {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .side-panel {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .demo-header {
+            background: linear-gradient(135deg, #003f7f, #0078d4);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .demo-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .scenario-buttons {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .scenario-btn {
+            background: linear-gradient(135deg, #0078d4, #40e0d0);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .scenario-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 120, 212, 0.3);
+        }
+
+        .scenario-btn.active {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .chatbot-container {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .status-panel h3 {
+            color: #003f7f;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #0078d4;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-active { background: #28a745; }
+        .status-inactive { background: #dc3545; }
+        .status-pending { background: #ffc107; }
+
+        .log-area {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+            margin-top: 15px;
+        }
+
+        .demo-scenario {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .scenario-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 8px;
+        }
+
+        .scenario-steps {
+            font-size: 14px;
+            color: #533f03;
+        }
+
+        .quick-start {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .quick-start h4 {
+            color: #155724;
+            margin-bottom: 10px;
+        }
+
+        .quick-start ol {
+            color: #155724;
+            padding-left: 20px;
+        }
+
+        .feature-highlight {
+            background: #e7f3ff;
+            border: 1px solid #b6d7ff;            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        /* Chatbot Styles */
+        .chatbot-inner {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 500px;
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, #003f7f, #0078d4);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+            border-bottom: 3px solid #ffc72c;
+        }
+
+        .chatbot-header h2 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .chatbot-header p {
+            margin: 5px 0 0 0;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 15px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e1e8ed;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .message-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            margin: 0 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .message.bot .message-avatar {
+            background: linear-gradient(135deg, #003f7f, #0078d4);
+            color: white;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .typing-indicator {
+            display: none;
+            margin-bottom: 12px;
+        }
+
+        .typing-indicator .message-content {
+            background: white;
+            border: 1px solid #e1e8ed;
+            padding: 12px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
+        }
+
+        .chat-input-container {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #e1e8ed;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .voice-button {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .voice-button:hover {
+            transform: scale(1.05);
+        }
+
+        .voice-button.recording {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            animation: pulse-red 1s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+
+        .speaker-button {
+            position: absolute;
+            top: 12px;
+            right: 50px;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .speaker-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid #e1e8ed;
+            border-radius: 20px;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #0078d4;
+        }
+
+        .send-button {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #003f7f, #0078d4);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+        }
+
+        .voice-status, .error-message {
+            font-size: 11px;
+            text-align: center;
+            margin-top: 4px;
+            min-height: 15px;
+        }
+
+        .error-message {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="main-demo">
+            <div class="demo-header">
+                <h1><i class="fas fa-robot"></i> VA Healthcare AI Chatbot</h1>
+                <p>Live Integration Demo - Training System & Context Awareness</p>
+            </div>
+
+            <div class="demo-content">
+                <div class="scenario-buttons">
+                    <button class="scenario-btn active" onclick="runScenario('basic')">
+                        <i class="fas fa-play"></i> Basic Chat
+                    </button>
+                    <button class="scenario-btn" onclick="runScenario('context')">
+                        <i class="fas fa-brain"></i> Context Demo
+                    </button>
+                    <button class="scenario-btn" onclick="runScenario('training')">
+                        <i class="fas fa-upload"></i> Training Demo
+                    </button>
+                    <button class="scenario-btn" onclick="runScenario('followup')">
+                        <i class="fas fa-question-circle"></i> Follow-up Demo
+                    </button>
+                    <button class="scenario-btn" onclick="clearChat()">
+                        <i class="fas fa-refresh"></i> Clear Chat
+                    </button>
+                </div>                <div class="chatbot-container">
+                    <div id="chatbot" class="chatbot-inner">
+                        <div class="chatbot-header">
+                            <button class="speaker-button" id="speakerButton" title="Toggle speech">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
+                            <h2><i class="fas fa-user-md"></i> Department of Veterans Affairs</h2>
+                            <p>Healthcare Information Assistant</p>
+                        </div>
+
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="message bot">
+                                <div class="message-avatar">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div class="message-content">
+                                    Hello! I'm your Department of Veterans Affairs Healthcare Assistant. Ask me about procedures, benefits, or follow-up with "how is it done?"
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="typing-indicator" id="typingIndicator">
+                            <div class="message-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="message-content">
+                                <div class="typing-dots">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chat-input-container">
+                            <div class="chat-input-wrapper">
+                                <button class="voice-button" id="voiceButton" title="Click to speak">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                                <input 
+                                    type="text" 
+                                    class="chat-input" 
+                                    id="chatInput" 
+                                    placeholder="Type your question here..."
+                                    maxlength="500"
+                                >
+                                <button class="send-button" id="sendButton">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                            <div class="voice-status" id="voiceStatus"></div>
+                            <div class="error-message" id="errorMessage"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-panel">
+            <div class="status-panel">
+                <h3><i class="fas fa-tachometer-alt"></i> Integration Status</h3>
+                
+                <div class="status-item">
+                    <span class="status-indicator status-active"></span>
+                    <strong>Chatbot Core:</strong> Active
+                </div>
+                
+                <div class="status-item">
+                    <span class="status-indicator status-active"></span>
+                    <strong>Context Awareness:</strong> Enabled
+                </div>
+                
+                <div class="status-item">
+                    <span class="status-indicator status-pending" id="training-status"></span>
+                    <strong>Training Integration:</strong> <span id="training-text">Loading...</span>
+                </div>
+                
+                <div class="status-item">
+                    <span class="status-indicator status-active"></span>
+                    <strong>Follow-up Detection:</strong> Active
+                </div>
+
+                <div class="quick-start">
+                    <h4><i class="fas fa-rocket"></i> Quick Start</h4>
+                    <ol>
+                        <li>Click "Context Demo" to see memory in action</li>
+                        <li>Try asking "How is it done?" after any response</li>
+                        <li>Use "Training Demo" to see learning capabilities</li>
+                        <li>Notice how medical terms are explained</li>
+                    </ol>
+                </div>
+
+                <div class="feature-highlight">
+                    <strong><i class="fas fa-lightbulb"></i> Try These Follow-ups:</strong><br>
+                    • "How is it done?"<br>
+                    • "Tell me more about that"<br>
+                    • "What does that involve?"<br>
+                    • "Can you explain that better?"
+                </div>
+
+                <div class="demo-scenario" id="current-scenario">
+                    <div class="scenario-title">Current Scenario: Basic Chat</div>
+                    <div class="scenario-steps">
+                        Ask any healthcare question to start a conversation.
+                    </div>
+                </div>
+
+                <h3><i class="fas fa-terminal"></i> Live Log</h3>
+                <div id="live-log" class="log-area"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="chatbot.js"></script>
+    <script>
+        // Global variables
+        let demoChatbot = null;
+        let currentScenario = 'basic';
+
+        // Logging function
+        function log(message, type = 'info') {
+            const logArea = document.getElementById('live-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            logArea.textContent += logEntry;
+            logArea.scrollTop = logArea.scrollHeight;
+            console.log(logEntry.trim());
+        }
+
+        // Initialize the demo
+        document.addEventListener('DOMContentLoaded', async function() {
+            log('Initializing VA Healthcare AI Chatbot Demo');
+            
+            try {                // Initialize chatbot
+                const chatbotContainer = document.getElementById('chatbot');
+                demoChatbot = new VAChatbot();
+                
+                log('Chatbot initialized successfully');
+                
+                // Setup sample training data
+                await setupSampleData();
+                
+                // Update training status
+                updateTrainingStatus();
+                
+                log('Demo ready - all systems operational');
+                
+            } catch (error) {
+                log(`Initialization error: ${error.message}`, 'error');
+            }
+        });
+
+        // Setup sample training data
+        async function setupSampleData() {
+            const sampleTrainingData = {
+                'knee replacement surgery': {
+                    answer: 'Knee replacement surgery is a procedure where damaged knee joint parts are replaced with artificial components (man-made parts). This helps reduce pain and improve mobility (movement).',
+                    category: 'procedure',
+                    keywords: ['knee', 'replacement', 'surgery', 'joint'],
+                    alternatives: ['What is knee surgery?', 'Tell me about knee replacement']
+                },
+                'ptsd treatment': {
+                    answer: 'PTSD (Post-Traumatic Stress Disorder) treatment includes therapy (counseling), support groups, and sometimes medication (medicine) to help manage symptoms.',
+                    category: 'mental_health',
+                    keywords: ['ptsd', 'therapy', 'counseling', 'trauma'],
+                    alternatives: ['How is PTSD treated?', 'What helps with PTSD?']
+                },
+                'va disability benefits': {
+                    answer: 'VA disability benefits provide monthly compensation (money) to veterans for service-connected injuries or illnesses. The amount depends on your disability rating (percentage).',
+                    category: 'benefits',
+                    keywords: ['disability', 'benefits', 'compensation', 'rating'],
+                    alternatives: ['What are VA disability benefits?', 'How much do I get for disability?']
+                }
+            };
+
+            const sampleQAPairs = [
+                {
+                    question: 'How long does knee surgery recovery take?',
+                    answer: 'Knee surgery recovery typically takes 6-12 weeks with physical therapy (PT). Full recovery can take 3-6 months. Most people can walk with assistance within a few days.',
+                    category: 'recovery',
+                    timestamp: Date.now()
+                },
+                {
+                    question: 'What mental health services does VA offer?',
+                    answer: 'VA offers counseling (therapy), support groups, crisis intervention (emergency help), and specialized programs for PTSD, depression, and substance abuse.',
+                    category: 'mental_health',
+                    timestamp: Date.now()
+                }
+            ];
+
+            // Store sample data
+            localStorage.setItem('va_chatbot_training_data', JSON.stringify(sampleTrainingData));
+            localStorage.setItem('va_chatbot_qa_pairs', JSON.stringify(sampleQAPairs));
+            
+            // Load into chatbot
+            if (demoChatbot && demoChatbot.loadTrainingData) {
+                await demoChatbot.loadTrainingData();
+                log('Sample training data loaded successfully');
+            }
+        }
+
+        // Update training status indicator
+        function updateTrainingStatus() {
+            const statusIndicator = document.getElementById('training-status');
+            const statusText = document.getElementById('training-text');
+            
+            const trainingData = localStorage.getItem('va_chatbot_training_data');
+            const qaPairs = localStorage.getItem('va_chatbot_qa_pairs');
+            
+            if (trainingData && qaPairs) {
+                statusIndicator.className = 'status-indicator status-active';
+                statusText.textContent = 'Connected & Synced';
+                log('Training system status: Active and synced');
+            } else {
+                statusIndicator.className = 'status-indicator status-inactive';
+                statusText.textContent = 'No Training Data';
+                log('Training system status: No data available');
+            }
+        }
+
+        // Run demo scenarios
+        function runScenario(scenario) {
+            // Update active button
+            document.querySelectorAll('.scenario-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            currentScenario = scenario;
+            log(`Running scenario: ${scenario}`);
+            
+            const scenarioDiv = document.getElementById('current-scenario');
+            
+            switch (scenario) {
+                case 'basic':
+                    scenarioDiv.innerHTML = `
+                        <div class="scenario-title">Current Scenario: Basic Chat</div>
+                        <div class="scenario-steps">
+                            Ask any healthcare question to start a conversation. 
+                            Notice how medical terms are automatically explained.
+                        </div>
+                    `;
+                    break;
+                    
+                case 'context':
+                    scenarioDiv.innerHTML = `
+                        <div class="scenario-title">Current Scenario: Context Awareness Demo</div>
+                        <div class="scenario-steps">
+                            1. Ask about a medical procedure<br>
+                            2. Then ask "How is it done?"<br>
+                            3. Watch how context is maintained!
+                        </div>
+                    `;
+                    // Demo the context scenario
+                    setTimeout(() => {
+                        if (demoChatbot && demoChatbot.sendMessage) {
+                            demoChatbot.sendMessage('What is knee replacement surgery?');
+                            log('Context demo: Asked about knee replacement surgery');
+                        }
+                    }, 1000);
+                    break;
+                    
+                case 'training':
+                    scenarioDiv.innerHTML = `
+                        <div class="scenario-title">Current Scenario: Training Integration Demo</div>
+                        <div class="scenario-steps">
+                            Sample training data has been loaded. Ask questions about:
+                            • Knee surgery • PTSD treatment • VA benefits
+                        </div>
+                    `;
+                    log('Training demo: Sample data available for testing');
+                    break;
+                    
+                case 'followup':
+                    scenarioDiv.innerHTML = `
+                        <div class="scenario-title">Current Scenario: Follow-up Question Demo</div>
+                        <div class="scenario-steps">
+                            After any response, try these follow-up questions:
+                            • "How is it done?" • "Tell me more" • "What happens next?"
+                        </div>
+                    `;
+                    // Demo follow-up capability
+                    setTimeout(() => {
+                        if (demoChatbot && demoChatbot.sendMessage) {
+                            demoChatbot.sendMessage('Tell me about PTSD treatment');
+                            log('Follow-up demo: Asked about PTSD treatment');
+                            
+                            setTimeout(() => {
+                                log('Follow-up demo: Now try asking "How is it done?" or "Tell me more"');
+                            }, 3000);
+                        }
+                    }, 1000);
+                    break;
+            }
+        }
+
+        // Clear chat function
+        function clearChat() {
+            if (demoChatbot && demoChatbot.clearConversation) {
+                demoChatbot.clearConversation();
+                log('Chat conversation cleared');
+            } else if (demoChatbot) {
+                // Fallback: clear conversation history manually
+                demoChatbot.conversationHistory = [];
+                demoChatbot.currentTopic = '';
+                demoChatbot.lastQuestionCategory = '';
+                demoChatbot.contextMemory.clear();
+                
+                // Clear the chat UI
+                const chatMessages = document.querySelector('.chat-messages');
+                if (chatMessages) {
+                    chatMessages.innerHTML = '';
+                }
+                
+                log('Chat conversation cleared (manual fallback)');
+            }
+        }
+
+        // Monitor localStorage changes
+        window.addEventListener('storage', function(event) {
+            if (event.key && event.key.startsWith('va_chatbot_')) {
+                log(`Storage updated: ${event.key}`);
+                updateTrainingStatus();
+            }
+        });        // Auto-refresh training status every 10 seconds
+        setInterval(updateTrainingStatus, 10000);
+    </script>
+    
+    <!-- Import the main chatbot JavaScript -->
+    <script src="chatbot.js"></script>
+</body>
+</html>

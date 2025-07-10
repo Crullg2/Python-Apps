@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VA Healthcare AI Chatbot - Minimal Integration Example</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .integration-example {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            gap: 30px;
+        }
+        
+        .instructions {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .chatbot-demo {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        
+        .step {
+            margin: 20px 0;
+            padding: 20px;
+            border-left: 4px solid #0078d4;
+            background: #f0f8ff;
+        }
+        
+        /* Chatbot Styles */
+        .chatbot-container {
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, #003f7f, #0078d4);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            border-bottom: 3px solid #ffc72c;
+        }
+
+        .chatbot-header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .chatbot-header p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e1e8ed;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .message.bot .message-avatar {
+            background: linear-gradient(135deg, #003f7f, #0078d4);
+            color: white;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .typing-indicator {
+            display: none;
+            margin-bottom: 15px;
+        }
+
+        .typing-indicator .message-content {
+            background: white;
+            border: 1px solid #e1e8ed;
+            padding: 16px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e1e8ed;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .voice-button {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .voice-button:hover {
+            transform: scale(1.05);
+        }
+
+        .speaker-button {
+            position: absolute;
+            top: 15px;
+            right: 60px;
+            width: 35px;
+            height: 35px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #0078d4;
+        }
+
+        .send-button {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #003f7f, #0078d4);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+        }
+
+        .voice-status, .error-message {
+            font-size: 12px;
+            text-align: center;
+            margin-top: 5px;
+            min-height: 18px;
+        }
+
+        .error-message {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="integration-example">
+        <div class="instructions">
+            <h1><i class="fas fa-rocket"></i> VA Healthcare AI Chatbot - Integration Example</h1>
+            <p>This page demonstrates how to integrate the VA Healthcare AI Chatbot into your website with minimal setup.</p>
+            
+            <div class="step">
+                <h3>Step 1: Include Dependencies</h3>
+                <p>Add Font Awesome for icons and include the chatbot script:</p>
+                <div class="code-block">
+&lt;link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"&gt;
+&lt;script src="va-chatbot.js"&gt;&lt;/script&gt;
+                </div>
+            </div>
+            
+            <div class="step">
+                <h3>Step 2: Add HTML Structure</h3>
+                <p>Include the required DOM elements with proper IDs:</p>
+                <div class="code-block">
+&lt;div class="chatbot-container"&gt;
+    &lt;div class="chatbot-header"&gt;
+        &lt;button id="speakerButton"&gt;&lt;i class="fas fa-volume-up"&gt;&lt;/i&gt;&lt;/button&gt;
+        &lt;h2&gt;VA Healthcare Assistant&lt;/h2&gt;
+    &lt;/div&gt;
+    &lt;div id="chatMessages" class="chat-messages"&gt;&lt;/div&gt;
+    &lt;div id="typingIndicator" class="typing-indicator"&gt;&lt;/div&gt;
+    &lt;div class="chat-input-container"&gt;
+        &lt;div class="chat-input-wrapper"&gt;
+            &lt;button id="voiceButton" class="voice-button"&gt;&lt;i class="fas fa-microphone"&gt;&lt;/i&gt;&lt;/button&gt;
+            &lt;input type="text" id="chatInput" class="chat-input" placeholder="Ask a question..."&gt;
+            &lt;button id="sendButton" class="send-button"&gt;&lt;i class="fas fa-paper-plane"&gt;&lt;/i&gt;&lt;/button&gt;
+        &lt;/div&gt;
+        &lt;div id="voiceStatus" class="voice-status"&gt;&lt;/div&gt;
+        &lt;div id="errorMessage" class="error-message"&gt;&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+                </div>
+            </div>
+            
+            <div class="step">
+                <h3>Step 3: Initialize Chatbot</h3>
+                <p>Create a new chatbot instance:</p>
+                <div class="code-block">
+&lt;script&gt;
+    // Initialize the chatbot when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatbot = new VAChatbot();
+        console.log('VA Healthcare Chatbot initialized!');
+    });
+&lt;/script&gt;
+                </div>
+            </div>
+            
+            <div class="step">
+                <h3>Key Features</h3>
+                <ul>
+                    <li><strong>Context Awareness:</strong> Remembers conversation history</li>
+                    <li><strong>Follow-up Questions:</strong> Handles "How is it done?" and similar</li>
+                    <li><strong>Voice Support:</strong> Speech-to-text and text-to-speech</li>
+                    <li><strong>Training Integration:</strong> Can learn from uploaded documents</li>
+                    <li><strong>Simple Language:</strong> Automatically explains medical terms</li>
+                    <li><strong>Mobile Responsive:</strong> Works on all devices</li>
+                    <li><strong>Accessibility:</strong> Screen reader and keyboard navigation support</li>
+                </ul>
+            </div>
+            
+            <div class="step">
+                <h3>Customization</h3>
+                <p>Customize the appearance with CSS variables:</p>
+                <div class="code-block">
+:root {
+    --va-primary: #003f7f;
+    --va-secondary: #0078d4;
+    --va-accent: #ffc72c;
+}
+                </div>
+            </div>
+        </div>
+        
+        <div class="chatbot-demo">
+            <div class="chatbot-container">
+                <div class="chatbot-header">
+                    <button class="speaker-button" id="speakerButton" title="Toggle Text-to-Speech">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                    <h2><i class="fas fa-user-md"></i> Department of Veterans Affairs</h2>
+                    <p>Healthcare Information Assistant</p>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot">
+                        <div class="message-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="message-content">
+                            Hello! I'm your Department of Veterans Affairs Healthcare Assistant. I can help answer questions about medical procedures, mental health services, disability benefits, and general VA services. How can I assist you today?
+                        </div>
+                    </div>
+                </div>
+
+                <div class="typing-indicator" id="typingIndicator">
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <div class="typing-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                        <button class="voice-button" id="voiceButton" title="Click to speak">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        <input 
+                            type="text" 
+                            class="chat-input" 
+                            id="chatInput" 
+                            placeholder="Type your question here or click the microphone..."
+                            maxlength="500"
+                        >
+                        <button class="send-button" id="sendButton">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="voice-status" id="voiceStatus"></div>
+                    <div class="error-message" id="errorMessage"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include the chatbot script -->
+    <script src="chatbot.js"></script>
+    
+    <script>
+        // Initialize the chatbot
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                const chatbot = new VAChatbot();
+                console.log('✅ VA Healthcare Chatbot initialized successfully!');
+                
+                // Add some sample training data for demonstration
+                setTimeout(() => {
+                    const sampleData = {
+                        'vasectomy procedure': {
+                            answer: 'A vasectomy is a minor surgical procedure that prevents pregnancy by cutting or blocking the vas deferens (tubes that carry sperm). It\'s considered a permanent form of birth control for men.',
+                            category: 'procedure',
+                            keywords: ['vasectomy', 'surgery', 'birth control', 'permanent'],
+                            alternatives: ['What is a vasectomy?', 'Tell me about vasectomy surgery']
+                        },
+                        'va benefits': {
+                            answer: 'VA benefits include disability compensation, healthcare, education assistance (GI Bill), home loans, and vocational rehabilitation. Eligibility depends on your service history and discharge status.',
+                            category: 'benefits',
+                            keywords: ['benefits', 'compensation', 'gi bill', 'loans'],
+                            alternatives: ['What VA benefits are available?', 'How do I get VA benefits?']
+                        }
+                    };
+                    
+                    localStorage.setItem('va_chatbot_training_data', JSON.stringify({
+                        qaPairs: Object.keys(sampleData).map(key => ({
+                            question: key,
+                            answer: sampleData[key].answer,
+                            category: sampleData[key].category,
+                            timestamp: Date.now()
+                        })),
+                        lastUpdated: new Date(),
+                        version: '1.0'
+                    }));
+                    
+                    chatbot.loadTrainingData();
+                    console.log('📚 Sample training data loaded');
+                }, 1000);
+                
+            } catch (error) {
+                console.error('❌ Error initializing chatbot:', error);
+                document.getElementById('errorMessage').textContent = 'Chatbot initialization failed. Please refresh the page.';
+            }
+        });
+    </script>
+</body>
+</html>

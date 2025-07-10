@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VA AI Chatbot - Quick Integration Test</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            padding: 20px;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        #chatbot-test {
+            border: 2px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            min-height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1><i class="fas fa-flask"></i> VA AI Chatbot - Quick Integration Test</h1>
+        
+        <div id="status-log"></div>
+        
+        <div id="chatbot-test">
+            <h3>Chatbot Integration Test Area</h3>
+            <div id="test-results"></div>
+        </div>
+        
+        <button onclick="runQuickTest()" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+            Run Quick Test
+        </button>
+    </div>
+
+    <!-- Import the main chatbot JavaScript -->
+    <script src="chatbot.js"></script>
+    
+    <script>
+        function log(message, type = 'info') {
+            const statusLog = document.getElementById('status-log');
+            const statusClass = type === 'error' ? 'error' : (type === 'warning' ? 'warning' : 'success');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${statusClass}`;
+            statusDiv.innerHTML = `[${timestamp}] ${message}`;
+            statusLog.appendChild(statusDiv);
+            
+            console.log(`${type.toUpperCase()}: ${message}`);
+        }
+        
+        async function runQuickTest() {
+            log('Starting quick integration test...');
+            
+            try {
+                // Test 1: Check if VAChatbot class exists
+                if (typeof VAChatbot !== 'undefined') {
+                    log('✓ VAChatbot class is available');
+                } else {
+                    log('✗ VAChatbot class not found', 'error');
+                    return;
+                }
+                
+                // Test 2: Try to create a temporary chatbot instance
+                const tempContainer = document.createElement('div');
+                tempContainer.innerHTML = `
+                    <div id="tempChatMessages"></div>
+                    <input type="text" id="tempChatInput" />
+                    <button id="tempSendButton"></button>
+                    <button id="tempVoiceButton"></button>
+                    <button id="tempSpeakerButton"></button>
+                    <div id="tempTypingIndicator"></div>
+                    <div id="tempErrorMessage"></div>
+                    <div id="tempVoiceStatus"></div>
+                `;
+                document.body.appendChild(tempContainer);
+                
+                // Temporarily replace IDs for testing
+                const originalGetElementById = document.getElementById;
+                document.getElementById = function(id) {
+                    const tempId = 'temp' + id.charAt(0).toUpperCase() + id.slice(1);
+                    return tempContainer.querySelector(`#${tempId}`) || originalGetElementById.call(this, id);
+                };
+                
+                const testChatbot = new VAChatbot();
+                log('✓ VAChatbot instance created successfully');
+                
+                // Restore original getElementById
+                document.getElementById = originalGetElementById;
+                document.body.removeChild(tempContainer);
+                
+                // Test 3: Check required methods
+                const requiredMethods = [
+                    'setupTrainingIntegration',
+                    'loadTrainingData',
+                    'isFollowUpQuestion',
+                    'generateContextualResponse',
+                    'updateContext',
+                    'simplifyLanguage'
+                ];
+                
+                let methodsFound = 0;
+                requiredMethods.forEach(method => {
+                    if (typeof testChatbot[method] === 'function') {
+                        log(`✓ Method ${method} exists`);
+                        methodsFound++;
+                    } else {
+                        log(`✗ Method ${method} missing`, 'warning');
+                    }
+                });
+                
+                log(`${methodsFound}/${requiredMethods.length} required methods found`);
+                
+                // Test 4: Check localStorage functionality
+                try {
+                    localStorage.setItem('test_key', 'test_value');
+                    const testValue = localStorage.getItem('test_key');
+                    if (testValue === 'test_value') {
+                        log('✓ localStorage functionality working');
+                        localStorage.removeItem('test_key');
+                    } else {
+                        log('✗ localStorage not working properly', 'error');
+                    }
+                } catch (e) {
+                    log('✗ localStorage access denied', 'error');
+                }
+                
+                // Test 5: Check training data structure
+                const sampleTrainingData = {
+                    'test_question': {
+                        answer: 'Test answer',
+                        category: 'test',
+                        keywords: ['test'],
+                        alternatives: ['test question']
+                    }
+                };
+                
+                localStorage.setItem('va_chatbot_training_data', JSON.stringify(sampleTrainingData));
+                
+                if (testChatbot.loadTrainingData) {
+                    await testChatbot.loadTrainingData();
+                    log('✓ Training data loading functionality tested');
+                } else {
+                    log('✗ loadTrainingData method not available', 'warning');
+                }
+                
+                // Cleanup
+                localStorage.removeItem('va_chatbot_training_data');
+                
+                log('Quick integration test completed successfully!', 'success');
+                
+            } catch (error) {
+                log(`Test failed with error: ${error.message}`, 'error');
+                console.error('Test error details:', error);
+            }
+        }
+        
+        // Auto-run test when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Quick test page loaded. Click "Run Quick Test" to validate integration.');
+        });
+    </script>
+</body>
+</html>

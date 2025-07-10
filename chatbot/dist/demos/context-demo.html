@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VA AI Chatbot - Context & Training Integration Demo</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Sans Pro', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #003f7f 0%, #0078d4 25%, #40e0d0 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .demo-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+
+        .chatbot-section {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .demo-panel {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .demo-header {
+            background: linear-gradient(135deg, #003f7f, #0078d4);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 3px solid #ffc72c;
+        }
+
+        .demo-header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .demo-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .chat-iframe {
+            flex: 1;
+            border: none;
+            width: 100%;
+        }
+
+        .demo-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #0078d4;
+        }
+
+        .demo-section h3 {
+            color: #003f7f;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .demo-section p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+            color: #495057;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .feature-list li i {
+            color: #28a745;
+            margin-right: 10px;
+            width: 20px;
+        }
+
+        .example-questions {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .example-questions h4 {
+            color: #003f7f;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .question-example {
+            background: #e3f2fd;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            font-style: italic;
+            color: #1565c0;
+        }
+
+        .follow-up-example {
+            background: #fff3e0;
+            border-radius: 6px;
+            padding: 8px;
+            margin-left: 20px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #ef6c00;
+        }
+
+        .training-demo {
+            background: #e8f5e8;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .training-demo h4 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #0078d4, #003f7f);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 120, 212, 0.3);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #28a745;
+        }
+
+        .status-training {
+            background: #ffc107;
+        }
+
+        .context-display {
+            background: #f1f3f4;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .context-display h4 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-family: inherit;
+        }
+
+        .context-item {
+            background: white;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-left: 3px solid #0078d4;
+        }
+
+        @media (max-width: 1200px) {
+            .demo-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 600px auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <!-- Chatbot Section -->
+        <div class="chatbot-section">
+            <div class="demo-header">
+                <h1><i class="fas fa-robot"></i> Enhanced VA AI Chatbot</h1>
+                <p>Now with Context Awareness & Training Integration</p>
+            </div>
+            <iframe src="index.html" class="chat-iframe"></iframe>
+        </div>
+
+        <!-- Demo Panel -->
+        <div class="demo-panel">
+            <div class="demo-section">
+                <h3><i class="fas fa-brain"></i> Context Awareness Features</h3>
+                <p>The chatbot now remembers conversation context and can handle follow-up questions intelligently.</p>
+                
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i> Conversation memory for follow-up questions</li>
+                    <li><i class="fas fa-check"></i> Context-aware responses</li>
+                    <li><i class="fas fa-check"></i> Simple language explanations</li>
+                    <li><i class="fas fa-check"></i> Auto-generated follow-up suggestions</li>
+                </ul>
+
+                <div class="example-questions">
+                    <h4>Try These Conversation Flows:</h4>
+                    <div class="question-example">
+                        "What is a vasectomy?"
+                    </div>
+                    <div class="follow-up-example">
+                        Then ask: "How is it done?" or "How does it work?"
+                    </div>
+                    
+                    <div class="question-example">
+                        "How do I file for disability benefits?"
+                    </div>
+                    <div class="follow-up-example">
+                        Then ask: "How long does it take?" or "What documents do I need?"
+                    </div>
+                    
+                    <div class="question-example">
+                        "What is PTSD?"
+                    </div>
+                    <div class="follow-up-example">
+                        Then ask: "How to get help?" or "What treatment is available?"
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h3><i class="fas fa-graduation-cap"></i> Training Integration</h3>
+                <p>The chatbot automatically learns from new training data added through the training portal.</p>
+                
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i> Real-time training data integration</li>
+                    <li><i class="fas fa-check"></i> Automatic knowledge base updates</li>
+                    <li><i class="fas fa-check"></i> Simple language processing</li>
+                    <li><i class="fas fa-check"></i> Alternative question generation</li>
+                </ul>
+
+                <div class="training-demo">
+                    <h4>Training Portal Integration</h4>
+                    <p>When new Q&A pairs or documents are added in the training portal, they automatically become available to the chatbot within 30 seconds.</p>
+                    
+                    <a href="training.html" target="_blank" class="btn btn-small">
+                        <i class="fas fa-external-link-alt"></i> Open Training Portal
+                    </a>
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h3><i class="fas fa-comments"></i> Simple Language Features</h3>
+                <p>Complex medical and bureaucratic terms are automatically explained in simple language.</p>
+                
+                <div class="example-questions">
+                    <h4>Automatic Simplifications:</h4>
+                    <div class="context-item">
+                        <strong>Before:</strong> "vas deferens"<br>
+                        <strong>After:</strong> "vas deferens (tubes that carry sperm)"
+                    </div>
+                    <div class="context-item">
+                        <strong>Before:</strong> "service-connected disability"<br>
+                        <strong>After:</strong> "service-connected (related to military service) disability"
+                    </div>
+                    <div class="context-item">
+                        <strong>Before:</strong> "Post-Traumatic Stress Disorder"<br>
+                        <strong>After:</strong> "PTSD - a condition caused by traumatic events"
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h3><i class="fas fa-cogs"></i> System Status</h3>
+                <p>Real-time integration status and capabilities.</p>
+                
+                <div class="context-display">
+                    <h4>Current Status:</h4>
+                    <div class="context-item">
+                        <span class="status-indicator status-online"></span>
+                        Context Awareness: Active
+                    </div>
+                    <div class="context-item">
+                        <span class="status-indicator status-online"></span>
+                        Training Integration: Active
+                    </div>
+                    <div class="context-item">
+                        <span class="status-indicator status-online"></span>
+                        Simple Language: Active
+                    </div>
+                    <div class="context-item">
+                        <span class="status-indicator status-training"></span>
+                        Auto-sync: Every 30 seconds
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h3><i class="fas fa-lightbulb"></i> How It Works</h3>
+                <p>The enhanced chatbot uses several intelligent features:</p>
+                
+                <ul class="feature-list">
+                    <li><i class="fas fa-memory"></i> <strong>Conversation Memory:</strong> Tracks recent topics and categories</li>
+                    <li><i class="fas fa-search"></i> <strong>Follow-up Detection:</strong> Recognizes questions like "how is it done?"</li>
+                    <li><i class="fas fa-language"></i> <strong>Language Simplification:</strong> Converts medical terms to plain language</li>
+                    <li><i class="fas fa-sync"></i> <strong>Live Training Sync:</strong> Updates knowledge base in real-time</li>
+                    <li><i class="fas fa-question-circle"></i> <strong>Context Responses:</strong> Generates topic-specific follow-up answers</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Monitor localStorage for training updates
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'va_chatbot_training_data' || e.key === 'va_chatbot_custom_qa') {
+                console.log('Training data updated detected in demo');
+                // Could update status indicators here
+            }
+        });
+
+        // Simulate some demo data for testing
+        function addDemoTrainingData() {
+            const demoQA = [
+                {
+                    id: 'demo-1',
+                    question: 'What are the VA telehealth services?',
+                    answer: 'VA telehealth services allow you to have medical appointments from home using video calls, phone calls, or secure messaging. These services include primary care consultations, mental health counseling, medication reviews, and follow-up appointments.',
+                    category: 'healthcare',
+                    source: 'demo',
+                    confidence: 1.0,
+                    dateAdded: new Date()
+                },
+                {
+                    id: 'demo-2',
+                    question: 'How do I set up telehealth appointments?',
+                    answer: 'To set up telehealth appointments, contact your VA healthcare team or use My HealtheVet to request a virtual visit. You\'ll need a device with internet, camera, and microphone. VA staff will help you test your connection before your appointment.',
+                    category: 'healthcare',
+                    source: 'demo',
+                    confidence: 1.0,
+                    dateAdded: new Date()
+                }
+            ];
+
+            // Add to custom Q&A storage
+            let existingQA = JSON.parse(localStorage.getItem('va_chatbot_custom_qa') || '[]');
+            existingQA = existingQA.concat(demoQA);
+            localStorage.setItem('va_chatbot_custom_qa', JSON.stringify(existingQA));
+
+            // Trigger storage event
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: 'va_chatbot_custom_qa',
+                newValue: JSON.stringify(existingQA)
+            }));
+
+            console.log('Demo training data added');
+        }        // Add demo data when page loads
+        setTimeout(addDemoTrainingData, 2000);
+    </script>
+    
+    <!-- Import the main chatbot JavaScript -->
+    <script src="chatbot.js"></script>
+</body>
+</html>

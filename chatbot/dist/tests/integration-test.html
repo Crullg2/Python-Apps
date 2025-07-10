@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VA AI Chatbot - Integration Test Suite</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Sans Pro', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #003f7f 0%, #0078d4 25%, #40e0d0 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .test-header {
+            background: linear-gradient(135deg, #003f7f, #0078d4);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .test-content {
+            padding: 20px;
+        }
+
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0078d4;
+        }
+
+        .test-button {
+            background: linear-gradient(135deg, #0078d4, #40e0d0);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 120, 212, 0.3);
+        }
+
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .chatbot-integration {
+            display: none;
+        }        .log-area {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        /* Chatbot Styles */
+        .chatbot-container {
+            width: 450px;
+            height: 600px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin: 20px auto;
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, #003f7f, #0078d4);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            border-bottom: 3px solid #ffc72c;
+        }
+
+        .chatbot-header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .chatbot-header p {
+            margin: 5px 0 0 0;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e1e8ed;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .message.bot .message-avatar {
+            background: linear-gradient(135deg, #003f7f, #0078d4);
+            color: white;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .typing-indicator {
+            display: none;
+            margin-bottom: 15px;
+        }
+
+        .typing-indicator .message-content {
+            background: white;
+            border: 1px solid #e1e8ed;
+            padding: 16px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e1e8ed;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .voice-button {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            margin-right: 5px;
+        }
+
+        .voice-button:hover {
+            transform: scale(1.05);
+        }
+
+        .voice-button.recording {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            animation: pulse-red 1s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+
+        .speaker-button {
+            position: absolute;
+            top: 15px;
+            right: 60px;
+            width: 35px;
+            height: 35px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .speaker-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #0078d4;
+        }
+
+        .send-button {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #003f7f, #0078d4);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+        }
+
+        .voice-status, .error-message {
+            font-size: 12px;
+            text-align: center;
+            margin-top: 5px;
+            min-height: 18px;
+        }
+
+        .error-message {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1><i class="fas fa-flask"></i> VA AI Chatbot Integration Test Suite</h1>
+            <p>Testing Training System Integration & Context Awareness</p>
+        </div>
+
+        <div class="test-content">
+            <!-- Test 1: Basic Integration -->
+            <div class="test-section">
+                <h3><i class="fas fa-plug"></i> Test 1: Basic Integration Setup</h3>
+                <p>Tests if the chatbot can initialize and connect to the training system.</p>
+                <button class="test-button" onclick="runTest1()">Run Basic Integration Test</button>
+                <div id="test1-result" class="test-result"></div>
+            </div>
+
+            <!-- Test 2: Training Data Sync -->
+            <div class="test-section">
+                <h3><i class="fas fa-sync-alt"></i> Test 2: Training Data Sync</h3>
+                <p>Tests if training data properly syncs between training portal and chatbot.</p>
+                <button class="test-button" onclick="runTest2()">Run Sync Test</button>
+                <div id="test2-result" class="test-result"></div>
+            </div>
+
+            <!-- Test 3: Context Awareness -->
+            <div class="test-section">
+                <h3><i class="fas fa-brain"></i> Test 3: Context Awareness</h3>
+                <p>Tests if the chatbot can maintain context and handle follow-up questions.</p>
+                <button class="test-button" onclick="runTest3()">Run Context Test</button>
+                <div id="test3-result" class="test-result"></div>
+            </div>
+
+            <!-- Test 4: Simple Language Processing -->
+            <div class="test-section">
+                <h3><i class="fas fa-language"></i> Test 4: Simple Language Processing</h3>
+                <p>Tests if the chatbot can simplify medical terms and provide easy explanations.</p>
+                <button class="test-button" onclick="runTest4()">Run Language Test</button>
+                <div id="test4-result" class="test-result"></div>
+            </div>
+
+            <!-- Test 5: Follow-up Question Detection -->
+            <div class="test-section">
+                <h3><i class="fas fa-question-circle"></i> Test 5: Follow-up Question Detection</h3>
+                <p>Tests if the chatbot can detect and respond to follow-up questions appropriately.</p>
+                <button class="test-button" onclick="runTest5()">Run Follow-up Test</button>
+                <div id="test5-result" class="test-result"></div>
+            </div>
+
+            <!-- Test 6: End-to-End Workflow -->
+            <div class="test-section">
+                <h3><i class="fas fa-route"></i> Test 6: End-to-End Workflow</h3>
+                <p>Simulates a complete user interaction from document upload to follow-up questions.</p>
+                <button class="test-button" onclick="runTest6()">Run Complete Workflow Test</button>
+                <div id="test6-result" class="test-result"></div>
+            </div>
+
+            <!-- Run All Tests -->
+            <div class="test-section">
+                <h3><i class="fas fa-play"></i> Run All Tests</h3>
+                <p>Execute all tests in sequence to validate the complete integration.</p>
+                <button class="test-button" onclick="runAllTests()" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                    <i class="fas fa-rocket"></i> Run All Tests
+                </button>
+                <div id="all-tests-result" class="test-result"></div>
+            </div>
+
+            <!-- Test Log -->
+            <div class="test-section">
+                <h3><i class="fas fa-terminal"></i> Test Log</h3>
+                <div id="test-log" class="log-area"></div>
+            </div>
+        </div>
+    </div>    <!-- Hidden chatbot integration for testing -->
+    <div class="chatbot-integration">
+        <div id="chatbot" class="chatbot-container" style="display: none;">
+            <div class="chatbot-header">
+                <button class="speaker-button" id="speakerButton" title="Toggle speech">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <h2><i class="fas fa-user-md"></i> Department of Veterans Affairs</h2>
+                <p>Healthcare Information Assistant</p>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        Hello! I'm your Department of Veterans Affairs Healthcare Assistant. How can I assist you today?
+                    </div>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <div class="chat-input-wrapper">
+                    <button class="voice-button" id="voiceButton" title="Click to speak">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <input 
+                        type="text" 
+                        class="chat-input" 
+                        id="chatInput" 
+                        placeholder="Type your question here..."
+                        maxlength="500"
+                    >
+                    <button class="send-button" id="sendButton">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="voice-status" id="voiceStatus"></div>
+                <div class="error-message" id="errorMessage"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="chatbot.js"></script>
+    <script>
+        // Global test variables
+        let testChatbot = null;
+        let testResults = {
+            test1: false,
+            test2: false,
+            test3: false,
+            test4: false,
+            test5: false,
+            test6: false
+        };
+
+        // Logging function
+        function log(message, type = 'info') {
+            const logArea = document.getElementById('test-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            logArea.textContent += logEntry;
+            logArea.scrollTop = logArea.scrollHeight;
+            console.log(logEntry.trim());
+        }
+
+        // Test 1: Basic Integration Setup
+        async function runTest1() {
+            const resultDiv = document.getElementById('test1-result');
+            resultDiv.className = 'test-result info';
+            resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running basic integration test...';
+            
+            try {
+                log('Starting Test 1: Basic Integration Setup');                // Initialize chatbot
+                const chatbotContainer = document.getElementById('chatbot');
+                chatbotContainer.style.display = 'block'; // Show for testing
+                testChatbot = new VAChatbot();
+                
+                // Wait for initialization
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Check if chatbot has required methods
+                const requiredMethods = [
+                    'setupTrainingIntegration',
+                    'loadTrainingData',
+                    'isFollowUpQuestion',
+                    'generateContextualResponse',
+                    'simplifyLanguage'
+                ];
+                
+                let missingMethods = [];
+                for (const method of requiredMethods) {
+                    if (typeof testChatbot[method] !== 'function') {
+                        missingMethods.push(method);
+                    }
+                }
+                
+                if (missingMethods.length > 0) {
+                    throw new Error(`Missing required methods: ${missingMethods.join(', ')}`);
+                }
+                
+                // Check if context properties exist
+                const requiredProperties = [
+                    'conversationHistory',
+                    'currentTopic',
+                    'lastQuestionCategory',
+                    'contextMemory',
+                    'followUpKeywords'
+                ];
+                
+                let missingProperties = [];
+                for (const prop of requiredProperties) {
+                    if (!(prop in testChatbot)) {
+                        missingProperties.push(prop);
+                    }
+                }
+                
+                if (missingProperties.length > 0) {
+                    throw new Error(`Missing required properties: ${missingProperties.join(', ')}`);
+                }
+                
+                testResults.test1 = true;
+                resultDiv.className = 'test-result success';
+                resultDiv.innerHTML = '<i class="fas fa-check-circle"></i> ✅ Basic integration test PASSED!';
+                log('Test 1 PASSED: Basic integration setup successful');
+                
+            } catch (error) {
+                testResults.test1 = false;
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `<i class="fas fa-times-circle"></i> ❌ Basic integration test FAILED: ${error.message}`;
+                log(`Test 1 FAILED: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 2: Training Data Sync
+        async function runTest2() {
+            const resultDiv = document.getElementById('test2-result');
+            resultDiv.className = 'test-result info';
+            resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running training data sync test...';
+            
+            try {
+                log('Starting Test 2: Training Data Sync');
+                
+                if (!testChatbot) {
+                    throw new Error('Chatbot not initialized. Run Test 1 first.');
+                }
+                
+                // Add test training data to localStorage
+                const testTrainingData = {
+                    'knee replacement recovery': {
+                        answer: 'Knee replacement recovery typically takes 6-12 weeks. You will need physical therapy (PT) to help your knee get stronger.',
+                        category: 'recovery',
+                        keywords: ['knee', 'replacement', 'recovery', 'healing'],
+                        alternatives: ['How long does knee surgery recovery take?', 'When will my knee feel better?']
+                    }
+                };
+                
+                localStorage.setItem('va_chatbot_training_data', JSON.stringify(testTrainingData));
+                
+                // Add test Q&A pairs
+                const testQAPairs = [
+                    {
+                        question: 'What is PTSD?',
+                        answer: 'PTSD (Post-Traumatic Stress Disorder) is a mental health condition that can happen after experiencing trauma.',
+                        category: 'mental_health',
+                        timestamp: Date.now()
+                    }
+                ];
+                
+                localStorage.setItem('va_chatbot_qa_pairs', JSON.stringify(testQAPairs));
+                
+                // Trigger sync
+                await testChatbot.loadTrainingData();
+                
+                // Verify data was loaded
+                if (!testChatbot.trainingData || Object.keys(testChatbot.trainingData).length === 0) {
+                    throw new Error('Training data not loaded properly');
+                }
+                
+                if (!testChatbot.customQAPairs || testChatbot.customQAPairs.length === 0) {
+                    throw new Error('Custom Q&A pairs not loaded properly');
+                }
+                
+                testResults.test2 = true;
+                resultDiv.className = 'test-result success';
+                resultDiv.innerHTML = '<i class="fas fa-check-circle"></i> ✅ Training data sync test PASSED!';
+                log('Test 2 PASSED: Training data sync successful');
+                
+            } catch (error) {
+                testResults.test2 = false;
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `<i class="fas fa-times-circle"></i> ❌ Training data sync test FAILED: ${error.message}`;
+                log(`Test 2 FAILED: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 3: Context Awareness
+        async function runTest3() {
+            const resultDiv = document.getElementById('test3-result');
+            resultDiv.className = 'test-result info';
+            resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running context awareness test...';
+            
+            try {
+                log('Starting Test 3: Context Awareness');
+                
+                if (!testChatbot) {
+                    throw new Error('Chatbot not initialized. Run Test 1 first.');
+                }
+                
+                // Simulate initial question about knee replacement
+                testChatbot.conversationHistory = [
+                    {
+                        user: 'Tell me about knee replacement recovery',
+                        bot: 'Knee replacement recovery typically takes 6-12 weeks. You will need physical therapy to help your knee get stronger.',
+                        timestamp: Date.now() - 5000
+                    }
+                ];
+                testChatbot.currentTopic = 'knee replacement recovery';
+                testChatbot.lastQuestionCategory = 'recovery';
+                
+                // Test follow-up question detection
+                const followUpQuestions = [
+                    'How is it done?',
+                    'Tell me more about that',
+                    'What does that involve?',
+                    'Can you explain that better?'
+                ];
+                
+                let followUpDetected = 0;
+                for (const question of followUpQuestions) {
+                    if (testChatbot.isFollowUpQuestion(question)) {
+                        followUpDetected++;
+                    }
+                }
+                
+                if (followUpDetected < 3) {
+                    throw new Error(`Follow-up detection failed. Only detected ${followUpDetected} out of ${followUpQuestions.length} questions.`);
+                }
+                
+                // Test contextual response generation
+                const contextResponse = testChatbot.generateContextualResponse('How is it done?');
+                if (!contextResponse || contextResponse.length < 10) {
+                    throw new Error('Contextual response generation failed');
+                }
+                
+                testResults.test3 = true;
+                resultDiv.className = 'test-result success';
+                resultDiv.innerHTML = '<i class="fas fa-check-circle"></i> ✅ Context awareness test PASSED!';
+                log('Test 3 PASSED: Context awareness working correctly');
+                
+            } catch (error) {
+                testResults.test3 = false;
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `<i class="fas fa-times-circle"></i> ❌ Context awareness test FAILED: ${error.message}`;
+                log(`Test 3 FAILED: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 4: Simple Language Processing
+        async function runTest4() {
+            const resultDiv = document.getElementById('test4-result');
+            resultDiv.className = 'test-result info';
+            resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running simple language processing test...';
+            
+            try {
+                log('Starting Test 4: Simple Language Processing');
+                
+                if (!testChatbot) {
+                    throw new Error('Chatbot not initialized. Run Test 1 first.');
+                }
+                
+                // Test medical term simplification
+                const medicalText = 'You may experience inflammation and require medication for optimal recovery.';
+                const simplifiedText = testChatbot.simplifyLanguage(medicalText);
+                
+                // Check if medical terms were explained
+                if (!simplifiedText.includes('(swelling)') || !simplifiedText.includes('(medicine)')) {
+                    throw new Error('Medical terms not properly simplified');
+                }
+                
+                // Test that follow-up suggestions are added
+                if (!simplifiedText.includes('Would you like me to explain')) {
+                    throw new Error('Follow-up suggestions not added');
+                }
+                
+                testResults.test4 = true;
+                resultDiv.className = 'test-result success';
+                resultDiv.innerHTML = '<i class="fas fa-check-circle"></i> ✅ Simple language processing test PASSED!';
+                log('Test 4 PASSED: Language simplification working correctly');
+                
+            } catch (error) {
+                testResults.test4 = false;
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `<i class="fas fa-times-circle"></i> ❌ Simple language processing test FAILED: ${error.message}`;
+                log(`Test 4 FAILED: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 5: Follow-up Question Detection
+        async function runTest5() {
+            const resultDiv = document.getElementById('test5-result');
+            resultDiv.className = 'test-result info';
+            resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running follow-up question detection test...';
+            
+            try {
+                log('Starting Test 5: Follow-up Question Detection');
+                
+                if (!testChatbot) {
+                    throw new Error('Chatbot not initialized. Run Test 1 first.');
+                }
+                
+                // Test various follow-up question patterns
+                const testCases = [
+                    { question: 'How is it done?', shouldDetect: true },
+                    { question: 'Tell me more about that', shouldDetect: true },
+                    { question: 'What does that mean?', shouldDetect: true },
+                    { question: 'Can you explain?', shouldDetect: true },
+                    { question: 'What is knee replacement?', shouldDetect: false },
+                    { question: 'Hello, how are you?', shouldDetect: false }
+                ];
+                
+                let correctDetections = 0;
+                for (const testCase of testCases) {
+                    const detected = testChatbot.isFollowUpQuestion(testCase.question);
+                    if (detected === testCase.shouldDetect) {
+                        correctDetections++;
+                    } else {
+                        log(`Detection error: "${testCase.question}" - Expected: ${testCase.shouldDetect}, Got: ${detected}`, 'error');
+                    }
+                }
+                
+                const accuracy = correctDetections / testCases.length;
+                if (accuracy < 0.8) {
+                    throw new Error(`Follow-up detection accuracy too low: ${(accuracy * 100).toFixed(1)}%`);
+                }
+                
+                testResults.test5 = true;
+                resultDiv.className = 'test-result success';
+                resultDiv.innerHTML = `<i class="fas fa-check-circle"></i> ✅ Follow-up detection test PASSED! (${(accuracy * 100).toFixed(1)}% accuracy)`;
+                log(`Test 5 PASSED: Follow-up detection accuracy: ${(accuracy * 100).toFixed(1)}%`);
+                
+            } catch (error) {
+                testResults.test5 = false;
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `<i class="fas fa-times-circle"></i> ❌ Follow-up detection test FAILED: ${error.message}`;
+                log(`Test 5 FAILED: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 6: End-to-End Workflow
+        async function runTest6() {
+            const resultDiv = document.getElementById('test6-result');
+            resultDiv.className = 'test-result info';
+            resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running end-to-end workflow test...';
+            
+            try {
+                log('Starting Test 6: End-to-End Workflow');
+                
+                if (!testChatbot) {
+                    throw new Error('Chatbot not initialized. Run Test 1 first.');
+                }
+                
+                // Simulate complete user workflow
+                log('Simulating user asking about mental health...');
+                
+                // Step 1: User asks initial question
+                const response1 = await testChatbot.generateResponse('What is PTSD?');
+                if (!response1 || response1.length < 10) {
+                    throw new Error('Initial response generation failed');
+                }
+                
+                // Step 2: Simulate conversation history update
+                testChatbot.conversationHistory.push({
+                    user: 'What is PTSD?',
+                    bot: response1,
+                    timestamp: Date.now()
+                });
+                testChatbot.currentTopic = 'PTSD';
+                testChatbot.lastQuestionCategory = 'mental_health';
+                
+                log('User asking follow-up question...');
+                
+                // Step 3: User asks follow-up question
+                const response2 = await testChatbot.generateResponse('How is it treated?');
+                if (!response2 || response2.length < 10) {
+                    throw new Error('Follow-up response generation failed');
+                }
+                
+                // Step 4: Verify context was maintained
+                if (!testChatbot.currentTopic || testChatbot.conversationHistory.length < 1) {
+                    throw new Error('Context not maintained between interactions');
+                }
+                
+                // Step 5: Test language simplification in responses
+                if (!response1.includes('(') || !response2.includes('(')) {
+                    log('Warning: Responses may not include simplified explanations', 'warn');
+                }
+                
+                testResults.test6 = true;
+                resultDiv.className = 'test-result success';
+                resultDiv.innerHTML = '<i class="fas fa-check-circle"></i> ✅ End-to-end workflow test PASSED!';
+                log('Test 6 PASSED: Complete workflow successful');
+                
+            } catch (error) {
+                testResults.test6 = false;
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `<i class="fas fa-times-circle"></i> ❌ End-to-end workflow test FAILED: ${error.message}`;
+                log(`Test 6 FAILED: ${error.message}`, 'error');
+            }
+        }
+
+        // Run all tests sequentially
+        async function runAllTests() {
+            const resultDiv = document.getElementById('all-tests-result');
+            resultDiv.className = 'test-result info';
+            resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running all tests...';
+            
+            log('='.repeat(50));
+            log('STARTING COMPLETE TEST SUITE');
+            log('='.repeat(50));
+            
+            // Reset test results
+            Object.keys(testResults).forEach(key => testResults[key] = false);
+            
+            // Run all tests in sequence
+            await runTest1();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await runTest2();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await runTest3();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await runTest4();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await runTest5();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await runTest6();
+            
+            // Calculate overall results
+            const passedTests = Object.values(testResults).filter(result => result).length;
+            const totalTests = Object.keys(testResults).length;
+            const successRate = (passedTests / totalTests) * 100;
+            
+            log('='.repeat(50));
+            log(`TEST SUITE COMPLETE: ${passedTests}/${totalTests} tests passed (${successRate.toFixed(1)}%)`);
+            log('='.repeat(50));
+            
+            if (passedTests === totalTests) {
+                resultDiv.className = 'test-result success';
+                resultDiv.innerHTML = `<i class="fas fa-trophy"></i> 🎉 ALL TESTS PASSED! (${passedTests}/${totalTests}) - Integration is working perfectly!`;
+            } else {
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ⚠️ ${passedTests}/${totalTests} tests passed. Please check failed tests above.`;
+            }
+        }        // Clear localStorage when page loads for clean testing
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Test suite initialized');
+            log('Click "Run All Tests" to validate the complete integration');
+        });
+    </script>
+    
+    <!-- Import the main chatbot JavaScript -->
+    <script src="chatbot.js"></script>
+</body>
+</html>

@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VA Chatbot Analytics Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Sans Pro', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, #003f7f, #0078d4);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 3px solid #ffc72c;
+        }
+
+        .dashboard-header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 600;
+        }
+
+        .dashboard-header p {
+            margin: 10px 0 0 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .dashboard-content {
+            padding: 30px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .metric-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .metric-change {
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .chart-section {
+            margin-bottom: 40px;
+        }
+
+        .chart-title {
+            font-size: 1.5em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #003f7f, #0078d4);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online { background: #28a745; }
+        .status-warning { background: #ffc107; }
+        .status-error { background: #dc3545; }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .dashboard-header {
+                padding: 20px;
+            }
+            
+            .dashboard-header h1 {
+                font-size: 2em;
+            }
+            
+            .dashboard-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1><i class="fas fa-chart-line"></i> VA Chatbot Analytics</h1>
+            <p>Real-time insights and usage patterns</p>
+        </div>
+        
+        <div class="dashboard-content">
+            <!-- Controls -->
+            <div class="controls">
+                <button class="btn" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> Refresh Data
+                </button>
+                <button class="btn" onclick="exportData()">
+                    <i class="fas fa-download"></i> Export Report
+                </button>
+                <button class="btn" onclick="clearData()">
+                    <i class="fas fa-trash"></i> Clear Data
+                </button>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="totalSessions">0</div>
+                    <div class="metric-label">Total Sessions</div>
+                    <div class="metric-change" id="sessionsChange">+0% from last week</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="totalQuestions">0</div>
+                    <div class="metric-label">Questions Asked</div>
+                    <div class="metric-change" id="questionsChange">+0% from last week</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="voiceUsage">0</div>
+                    <div class="metric-label">Voice Interactions</div>
+                    <div class="metric-change" id="voiceChange">+0% from last week</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="averageResponseTime">0ms</div>
+                    <div class="metric-label">Avg Response Time</div>
+                    <div class="metric-change" id="responseTimeChange">+0% from last week</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="chart-section">
+                <h2 class="chart-title">Usage Analytics</h2>
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <canvas id="questionsChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="topicsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-section">
+                <h2 class="chart-title">Performance Metrics</h2>
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <canvas id="responseTimeChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="voiceUsageChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Tables -->
+            <div class="chart-section">
+                <h2 class="chart-title">Recent Activity</h2>
+                <div class="chart-container">
+                    <table class="data-table" id="recentActivity">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Event</th>
+                                <th>Details</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Popular Questions -->
+            <div class="chart-section">
+                <h2 class="chart-title">Most Asked Questions</h2>
+                <div class="chart-container">
+                    <table class="data-table" id="popularQuestions">
+                        <thead>
+                            <tr>
+                                <th>Question</th>
+                                <th>Category</th>
+                                <th>Count</th>
+                                <th>Success Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Analytics Dashboard JavaScript
+        class AnalyticsDashboard {
+            constructor() {
+                this.charts = {};
+                this.data = {};
+                this.init();
+            }
+
+            init() {
+                this.loadData();
+                this.createCharts();
+                this.updateDisplay();
+                
+                // Auto-refresh every 30 seconds
+                setInterval(() => {
+                    this.loadData();
+                    this.updateDisplay();
+                }, 30000);
+            }
+
+            loadData() {
+                // Load analytics data from localStorage
+                const analyticsKey = 'va_chatbot_analytics';
+                const rawData = JSON.parse(localStorage.getItem(analyticsKey) || '[]');
+                
+                this.data = this.processAnalyticsData(rawData);
+            }
+
+            processAnalyticsData(rawData) {
+                const processed = {
+                    totalSessions: new Set(rawData.map(e => e.sessionId)).size,
+                    totalQuestions: rawData.filter(e => e.event === 'question_asked').length,
+                    voiceUsage: rawData.filter(e => e.event === 'voice_start').length,
+                    averageResponseTime: 0,
+                    topicBreakdown: {},
+                    timelineData: {},
+                    recentEvents: rawData.slice(-20).reverse(),
+                    popularQuestions: {}
+                };
+
+                // Calculate average response time
+                const responseTimes = rawData
+                    .filter(e => e.event === 'response_generated' && e.data.responseTime)
+                    .map(e => e.data.responseTime);
+                
+                if (responseTimes.length > 0) {
+                    processed.averageResponseTime = Math.round(
+                        responseTimes.reduce((a, b) => a + b) / responseTimes.length
+                    );
+                }
+
+                // Process topic breakdown
+                rawData.filter(e => e.event === 'question_asked' && e.data.category)
+                    .forEach(e => {
+                        const category = e.data.category;
+                        processed.topicBreakdown[category] = (processed.topicBreakdown[category] || 0) + 1;
+                    });
+
+                // Process timeline data (questions per hour)
+                rawData.filter(e => e.event === 'question_asked')
+                    .forEach(e => {
+                        const hour = new Date(e.timestamp).getHours();
+                        processed.timelineData[hour] = (processed.timelineData[hour] || 0) + 1;
+                    });
+
+                // Process popular questions
+                rawData.filter(e => e.event === 'question_asked' && e.data.question)
+                    .forEach(e => {
+                        const question = e.data.question.toLowerCase();
+                        if (!processed.popularQuestions[question]) {
+                            processed.popularQuestions[question] = {
+                                count: 0,
+                                category: e.data.category || 'unknown',
+                                successCount: 0
+                            };
+                        }
+                        processed.popularQuestions[question].count++;
+                    });
+
+                return processed;
+            }
+
+            updateDisplay() {
+                // Update metric cards
+                document.getElementById('totalSessions').textContent = this.data.totalSessions || 0;
+                document.getElementById('totalQuestions').textContent = this.data.totalQuestions || 0;
+                document.getElementById('voiceUsage').textContent = this.data.voiceUsage || 0;
+                document.getElementById('averageResponseTime').textContent = `${this.data.averageResponseTime || 0}ms`;
+
+                // Update charts
+                this.updateCharts();
+                this.updateTables();
+            }
+
+            createCharts() {
+                // Questions per hour chart
+                const questionsCtx = document.getElementById('questionsChart').getContext('2d');
+                this.charts.questions = new Chart(questionsCtx, {
+                    type: 'line',
+                    data: {
+                        labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                        datasets: [{
+                            label: 'Questions per Hour',
+                            data: Array(24).fill(0),
+                            borderColor: '#003f7f',
+                            backgroundColor: 'rgba(0, 63, 127, 0.1)',
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Questions by Hour'
+                            }
+                        }
+                    }
+                });
+
+                // Topic breakdown chart
+                const topicsCtx = document.getElementById('topicsChart').getContext('2d');
+                this.charts.topics = new Chart(topicsCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            data: [],
+                            backgroundColor: [
+                                '#003f7f', '#0078d4', '#40e0d0', '#ffc72c',
+                                '#28a745', '#dc3545', '#6f42c1', '#fd7e14'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Topics Distribution'
+                            }
+                        }
+                    }
+                });
+
+                // Response time chart
+                const responseCtx = document.getElementById('responseTimeChart').getContext('2d');
+                this.charts.responseTime = new Chart(responseCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['<500ms', '500-1000ms', '1000-2000ms', '>2000ms'],
+                        datasets: [{
+                            label: 'Response Time Distribution',
+                            data: [0, 0, 0, 0],
+                            backgroundColor: '#0078d4'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Response Time Distribution'
+                            }
+                        }
+                    }
+                });
+
+                // Voice usage chart
+                const voiceCtx = document.getElementById('voiceUsageChart').getContext('2d');
+                this.charts.voiceUsage = new Chart(voiceCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Text Input', 'Voice Input'],
+                        datasets: [{
+                            data: [0, 0],
+                            backgroundColor: ['#6c757d', '#28a745']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Input Method Usage'
+                            }
+                        }
+                    }
+                });
+            }
+
+            updateCharts() {
+                // Update questions chart
+                const timelineData = Array(24).fill(0);
+                Object.entries(this.data.timelineData).forEach(([hour, count]) => {
+                    timelineData[parseInt(hour)] = count;
+                });
+                this.charts.questions.data.datasets[0].data = timelineData;
+                this.charts.questions.update();
+
+                // Update topics chart
+                const topicLabels = Object.keys(this.data.topicBreakdown);
+                const topicData = Object.values(this.data.topicBreakdown);
+                this.charts.topics.data.labels = topicLabels;
+                this.charts.topics.data.datasets[0].data = topicData;
+                this.charts.topics.update();
+
+                // Update voice usage chart
+                const totalInputs = this.data.totalQuestions;
+                const voiceInputs = this.data.voiceUsage;
+                const textInputs = totalInputs - voiceInputs;
+                this.charts.voiceUsage.data.datasets[0].data = [textInputs, voiceInputs];
+                this.charts.voiceUsage.update();
+            }
+
+            updateTables() {
+                // Update recent activity table
+                const recentTable = document.getElementById('recentActivity').getElementsByTagName('tbody')[0];
+                recentTable.innerHTML = '';
+                
+                this.data.recentEvents.slice(0, 10).forEach(event => {
+                    const row = recentTable.insertRow();
+                    const time = new Date(event.timestamp).toLocaleTimeString();
+                    const statusClass = event.event.includes('error') ? 'status-error' : 
+                                      event.event.includes('warning') ? 'status-warning' : 'status-online';
+                    
+                    row.innerHTML = `
+                        <td>${time}</td>
+                        <td>${event.event.replace('_', ' ').toUpperCase()}</td>
+                        <td>${JSON.stringify(event.data).substring(0, 50)}...</td>
+                        <td><span class="status-indicator ${statusClass}"></span>Success</td>
+                    `;
+                });
+
+                // Update popular questions table
+                const questionsTable = document.getElementById('popularQuestions').getElementsByTagName('tbody')[0];
+                questionsTable.innerHTML = '';
+                
+                const sortedQuestions = Object.entries(this.data.popularQuestions)
+                    .sort(([,a], [,b]) => b.count - a.count)
+                    .slice(0, 10);
+
+                sortedQuestions.forEach(([question, data]) => {
+                    const row = questionsTable.insertRow();
+                    const successRate = data.successCount > 0 ? 
+                        Math.round((data.successCount / data.count) * 100) : 100;
+                    
+                    row.innerHTML = `
+                        <td>${question.substring(0, 50)}${question.length > 50 ? '...' : ''}</td>
+                        <td>${data.category}</td>
+                        <td>${data.count}</td>
+                        <td>${successRate}%</td>
+                    `;
+                });
+            }
+        }
+
+        // Control functions
+        function refreshData() {
+            dashboard.loadData();
+            dashboard.updateDisplay();
+            console.log('Data refreshed');
+        }
+
+        function exportData() {
+            const data = dashboard.data;
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `va-chatbot-analytics-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function clearData() {
+            if (confirm('Are you sure you want to clear all analytics data? This action cannot be undone.')) {
+                localStorage.removeItem('va_chatbot_analytics');
+                dashboard.loadData();
+                dashboard.updateDisplay();
+                alert('Analytics data cleared');
+            }
+        }
+
+        // Initialize dashboard when page loads
+        let dashboard;
+        document.addEventListener('DOMContentLoaded', () => {
+            dashboard = new AnalyticsDashboard();
+        });
+    </script>
+</body>
+</html>

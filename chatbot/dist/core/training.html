@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VA AI Chatbot Training Portal</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Sans Pro', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #003f7f 0%, #0078d4 25%, #40e0d0 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .training-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .training-header {
+            background: linear-gradient(135deg, #003f7f, #0078d4);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 3px solid #ffc72c;
+        }
+
+        .training-header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .training-header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #495057;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tab.active {
+            background: white;
+            color: #003f7f;
+            border-bottom: 3px solid #0078d4;
+        }
+
+        .nav-tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .upload-area {
+            border: 2px dashed #0078d4;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #003f7f;
+            background: #e3f2fd;
+        }
+
+        .upload-area.dragover {
+            border-color: #ffc72c;
+            background: #fff8e1;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #0078d4;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 18px;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #0078d4, #003f7f);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 120, 212, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d, #495057);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+
+        .file-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .file-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            color: #0078d4;
+        }
+
+        .file-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .file-meta {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+
+        .training-status {
+            background: #e8f4f8;
+            border: 1px solid #0078d4;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .status-value {
+            color: #0078d4;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #0078d4, #003f7f);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .qa-form {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #0078d4;
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .qa-list {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .qa-item {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .qa-question {
+            font-weight: 600;
+            color: #003f7f;
+            margin-bottom: 10px;
+        }
+
+        .qa-answer {
+            color: #495057;
+            line-height: 1.6;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #cce7ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+
+        .knowledge-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #0078d4;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="training-container">
+        <div class="training-header">
+            <h1><i class="fas fa-graduation-cap"></i> VA AI Chatbot Training Portal</h1>
+            <p>Upload documents, train knowledge base, and manage Q&A pairs</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-tab="upload">
+                <i class="fas fa-upload"></i> Document Upload
+            </button>
+            <button class="nav-tab" data-tab="qa">
+                <i class="fas fa-question-circle"></i> Q&A Management
+            </button>
+            <button class="nav-tab" data-tab="training">
+                <i class="fas fa-cogs"></i> Training Status
+            </button>
+            <button class="nav-tab" data-tab="knowledge">
+                <i class="fas fa-brain"></i> Knowledge Base
+            </button>
+        </div>
+
+        <!-- Document Upload Tab -->
+        <div class="tab-content active" id="upload">
+            <h2>Upload Training Documents</h2>
+            <p>Upload PDF documents, text files, or medical guidelines to expand the chatbot's knowledge base.</p>
+            
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-text">Drag & drop files here</div>
+                <div class="upload-subtext">or click to browse files</div>
+                <input type="file" id="fileInput" class="file-input" multiple accept=".pdf,.txt,.doc,.docx,.md">
+            </div>
+
+            <div class="btn-group">
+                <button class="btn" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-folder-open"></i> Browse Files
+                </button>
+                <button class="btn btn-secondary" onclick="trainingBot.processAllFiles()">
+                    <i class="fas fa-play"></i> Process All Files
+                </button>
+                <button class="btn btn-danger" onclick="trainingBot.clearAllFiles()">
+                    <i class="fas fa-trash"></i> Clear All
+                </button>
+            </div>
+
+            <div class="file-list" id="fileList" style="display: none;">
+                <h3>Uploaded Files</h3>
+                <div id="fileItems"></div>
+            </div>
+        </div>
+
+        <!-- Q&A Management Tab -->
+        <div class="tab-content" id="qa">
+            <h2>Q&A Pair Management</h2>
+            <p>Add custom question-answer pairs to enhance the chatbot's responses.</p>
+
+            <div class="qa-form">
+                <div class="form-group">
+                    <label class="form-label" for="questionInput">Question</label>
+                    <input type="text" id="questionInput" class="form-input" placeholder="Enter a question...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="answerInput">Answer</label>
+                    <textarea id="answerInput" class="form-input form-textarea" placeholder="Enter the answer..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="categoryInput">Category</label>
+                    <select id="categoryInput" class="form-input">
+                        <option value="">Select Category</option>
+                        <option value="healthcare">Healthcare Services</option>
+                        <option value="benefits">Benefits & Claims</option>
+                        <option value="mental-health">Mental Health</option>
+                        <option value="emergency">Emergency Services</option>
+                        <option value="appointments">Appointments</option>
+                        <option value="prescriptions">Prescriptions</option>
+                        <option value="general">General Information</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="trainingBot.addQAPair()">
+                    <i class="fas fa-plus"></i> Add Q&A Pair
+                </button>
+            </div>
+
+            <div class="qa-list" id="qaList">
+                <h3>Current Q&A Pairs</h3>
+                <div id="qaItems"></div>
+            </div>
+        </div>
+
+        <!-- Training Status Tab -->
+        <div class="tab-content" id="training">
+            <h2>Training Status</h2>
+            <p>Monitor the training progress and system status.</p>
+
+            <div class="training-status">
+                <div class="status-item">
+                    <span class="status-label">Training Status</span>
+                    <span class="status-value" id="trainingStatus">Ready</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Last Updated</span>
+                    <span class="status-value" id="lastUpdated">Never</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Processing Progress</span>
+                    <span class="status-value" id="processingProgress">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn" onclick="trainingBot.startTraining()">
+                    <i class="fas fa-play"></i> Start Training
+                </button>
+                <button class="btn btn-secondary" onclick="trainingBot.exportKnowledgeBase()">
+                    <i class="fas fa-download"></i> Export Knowledge Base
+                </button>
+                <button class="btn btn-secondary" onclick="trainingBot.importKnowledgeBase()">
+                    <i class="fas fa-upload"></i> Import Knowledge Base
+                </button>
+            </div>
+
+            <div id="trainingLog" class="file-list" style="display: none;">
+                <h3>Training Log</h3>
+                <div id="logItems"></div>
+            </div>
+        </div>
+
+        <!-- Knowledge Base Tab -->
+        <div class="tab-content" id="knowledge">
+            <h2>Knowledge Base Overview</h2>
+            <p>View statistics and manage the current knowledge base.</p>
+
+            <div class="knowledge-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalQA">0</div>
+                    <div class="stat-label">Q&A Pairs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalDocuments">0</div>
+                    <div class="stat-label">Documents</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalCategories">0</div>
+                    <div class="stat-label">Categories</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="knowledgeSize">0</div>
+                    <div class="stat-label">KB Size (MB)</div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn" onclick="trainingBot.refreshStats()">
+                    <i class="fas fa-sync"></i> Refresh Stats
+                </button>
+                <button class="btn btn-secondary" onclick="trainingBot.testKnowledge()">
+                    <i class="fas fa-vial"></i> Test Knowledge
+                </button>
+                <button class="btn" onclick="trainingBot.optimizeKnowledge()">
+                    <i class="fas fa-compress"></i> Optimize KB
+                </button>
+            </div>
+
+            <div class="qa-list">
+                <h3>Knowledge Base Preview</h3>
+                <div id="knowledgePreview"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="alertContainer"></div>
+    <input type="file" id="importInput" class="file-input" accept=".json">
+
+    <script src="training.js"></script>
+</body>
+</html>
