@@ -2,19 +2,26 @@
 
 Apps created.
 
-## Train Simulator Game (Visual)
+## Train Simulator Game (Browser + React)
 
-A visual train simulator built with Tkinter where you can:
+A browser-playable train simulator with a visual grid map and cab controls.
 
-- place/remove train tracks on a map by clicking cells
-- run a train from Start station to End station on your custom route
-- switch to cab view and control the train with throttle and brake
-- earn money/score by delivering passengers
+### Features
+
+- Place/remove tracks interactively by clicking cells in the map.
+- Run a train from Start to End over valid connected tracks.
+- Switch between **Map View** and **Cab View** while driving.
+- Control throttle/brake, use horn, and manage score/money/passenger stats.
 
 ### Run
 
 ```bash
-python train_simulator.py
+cd train-simulator-web
+python -m http.server 8000
 ```
 
-No external dependencies are required (Tkinter is included with most Python installations).
+Then open: `http://localhost:8000`
+
+## Legacy Desktop Version
+
+A Tkinter version remains available in `train_simulator.py`.
